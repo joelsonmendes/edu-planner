@@ -5,7 +5,7 @@ import { CourseData, Competency, Module, Lesson } from './tipos';
 // IMPORTANTE: Configure sua API Key do Google AI
 // Opção 1: Variável de ambiente (recomendado)
 // Opção 2: Substitua pela sua chave diretamente (apenas para desenvolvimento)
-const API_KEY = import.meta.env.VITE_GOOGLE_AI_API_KEY || 'SUA_API_KEY_AQUI';
+const API_KEY = import.meta.env.VITE_GOOGLE_AI_API_KEY || 'AIzaSyDzefnvdxB1c0yFxDGlHAsF12ooqBQD6ss';
 
 const ai = new GoogleGenerativeAI(API_KEY);
 
