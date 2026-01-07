@@ -18,8 +18,136 @@ import {
   Upload,
   Info,
   AlertCircle,
-  CheckCircle
+  CheckCircle,
+  Key,
+  Settings
 } from 'lucide-react';
+
+// Dados de exemplo para fallback
+const SAMPLE_COURSE_DATA: CourseData = {
+  courseName: "Design Instrucional com Metodologias Ativas",
+  description: "Curso completo sobre design instrucional moderno, focado na aplicação de metodologias ativas de aprendizagem em ambientes educacionais presenciais e online.",
+  totalDuration: "40 horas",
+  targetAudience: "Professores, coordenadores pedagógicos e designers instrucionais",
+  modules: [
+    {
+      id: 1,
+      title: "Fundamentos do Design Instrucional",
+      duration: "12 horas",
+      lessons: [
+        {
+          id: 1,
+          title: "Introdução ao Design Instrucional Moderno",
+          duration: "4 horas",
+          content: "Conceitos fundamentais, histórico e evolução do design instrucional. Abordagem dos principais modelos (ADDIE, SAM, Design Thinking) e sua aplicação prática.",
+          objectives: [
+            "Compreender os princípios do design instrucional",
+            "Identificar diferentes modelos de DI",
+            "Analisar casos de aplicação prática"
+          ],
+          methodology: "Aula expositiva dialogada com estudo de caso",
+          strategy: "Exposição teórica seguida de análise de casos reais em grupos",
+          assessment: "Questionário formativo e análise crítica de caso",
+          competenciesIds: [1, 2]
+        },
+        {
+          id: 2,
+          title: "Análise de Necessidades e Público-Alvo",
+          duration: "4 horas",
+          content: "Técnicas para análise de necessidades educacionais, identificação de gaps de aprendizagem e caracterização do público-alvo.",
+          objectives: [
+            "Aplicar técnicas de análise de necessidades",
+            "Caracterizar diferentes perfis de aprendizes",
+            "Elaborar perfis de público-alvo"
+          ],
+          methodology: "Workshop prático com atividades em grupo",
+          strategy: "Dinâmicas de grupo e construção colaborativa de personas",
+          assessment: "Elaboração de perfil de público-alvo e plano de análise",
+          competenciesIds: [2, 3]
+        },
+        {
+          id: 3,
+          title: "Definição de Objetivos de Aprendizagem",
+          duration: "4 horas",
+          content: "Formulação de objetivos de aprendizagem claros, mensuráveis e alinhados à Taxonomia de Bloom revisada.",
+          objectives: [
+            "Formular objetivos de aprendizagem SMART",
+            "Aplicar a Taxonomia de Bloom revisada",
+            "Alinhar objetivos com competências e habilidades"
+          ],
+          methodology: "Aprendizagem baseada em problemas",
+          strategy: "Resolução de problemas reais de formulação de objetivos",
+          assessment: "Elaboração de matriz de objetivos para um curso",
+          competenciesIds: [1, 3]
+        }
+      ]
+    },
+    {
+      id: 2,
+      title: "Metodologias Ativas de Aprendizagem",
+      duration: "16 horas",
+      lessons: [
+        {
+          id: 4,
+          title: "Aprendizagem Baseada em Problemas e Projetos",
+          duration: "4 horas",
+          content: "Implementação da ABP (Aprendizagem Baseada em Problemas) e PBL (Project-Based Learning) em diferentes contextos educacionais.",
+          objectives: [
+            "Diferenciar ABP e PBL",
+            "Estruturar problemas e projetos de aprendizagem",
+            "Avaliar resultados em metodologias ativas"
+          ],
+          methodology: "Sala de aula invertida com atividade prática",
+          strategy: "Preparação prévia com vídeos e leituras, seguida de workshop de criação",
+          assessment: "Desenvolvimento de um cenário de ABP completo",
+          competenciesIds: [3, 4]
+        },
+        {
+          id: 5,
+          title: "Gamificação e Elementos Lúdicos",
+          duration: "4 horas",
+          content: "Princípios de gamificação aplicados à educação: elementos de jogo, mecânicas, dinâmicas e recompensas.",
+          objectives: [
+            "Identificar elementos de gamificação aplicáveis",
+            "Desenhar atividades gamificadas",
+            "Avaliar o impacto da gamificação na motivação"
+          ],
+          methodology: "Design thinking com prototipagem",
+          strategy: "Processo de design thinking para criação de atividade gamificada",
+          assessment: "Prototipação e teste de atividade gamificada",
+          competenciesIds: [4, 5]
+        }
+      ]
+    }
+  ],
+  competencies: [
+    {
+      id: 1,
+      description: "Planejamento pedagógico estratégico",
+      knowledgeRelationship: "Conhecimento de teorias de aprendizagem e currículo"
+    },
+    {
+      id: 2,
+      description: "Análise de necessidades educacionais",
+      knowledgeRelationship: "Metodologias de pesquisa e diagnóstico educacional"
+    },
+    {
+      id: 3,
+      description: "Design de experiências de aprendizagem",
+      knowledgeRelationship: "Princípios de UX aplicados à educação"
+    },
+    {
+      id: 4,
+      description: "Aplicação de metodologias ativas",
+      knowledgeRelationship: "Conhecimento de diferentes abordagens pedagógicas"
+    },
+    {
+      id: 5,
+      description: "Avaliação de processos educacionais",
+      knowledgeRelationship: "Métodos e instrumentos de avaliação"
+    }
+  ]
+};
 
 const App: React.FC = () => {
   const [inputPlan, setInputPlan] = useState('');
@@ -30,11 +158,13 @@ const App: React.FC = () => {
   const [activeModuleId, setActiveModuleId] = useState<number | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
+  const [useSampleData, setUseSampleData] = useState(false);
+  const [showApiKeyInfo, setShowApiKeyInfo] = useState(false);
   
   const fileInputRef = useRef<HTMLInputElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
-  // Função para limpar mensagens após tempo
+  // Limpar mensagens após tempo
   useEffect(() => {
     if (error || successMessage) {
       const timer = setTimeout(() => {
@@ -45,7 +175,7 @@ const App: React.FC = () => {
     }
   }, [error, successMessage]);
 
-  // Focar no textarea ao carregar
+  // Focar no textarea
   useEffect(() => {
     if (textareaRef.current && !courseData && !loading) {
       textareaRef.current.focus();
@@ -54,7 +184,7 @@ const App: React.FC = () => {
 
   const extractTextFromPDF = async (file: File): Promise<string> => {
     try {
-      // @ts-ignore - PDF.js precisa de ignore
+      // @ts-ignore
       const pdfjs = await import('pdfjs-dist');
       pdfjs.GlobalWorkerOptions.workerSrc = `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/4.10.38/pdf.worker.min.mjs`;
       
@@ -63,25 +193,19 @@ const App: React.FC = () => {
       const pdf = await loadingTask.promise;
       let text = '';
       
-      // Limitar a 20 páginas para performance
-      const maxPages = Math.min(pdf.numPages, 20);
+      const maxPages = Math.min(pdf.numPages, 10);
       for (let i = 1; i <= maxPages; i++) {
         const page = await pdf.getPage(i);
         const content = await page.getTextContent();
         // @ts-ignore
         const pageText = content.items.map((item: any) => item.str).join(' ');
         text += pageText + '\n';
-        
-        // Mostrar progresso a cada 5 páginas
-        if (i % 5 === 0) {
-          setSuccessMessage(`Processando PDF... ${i}/${maxPages} páginas`);
-        }
       }
       
       return text;
     } catch (error) {
       console.error("Erro na extração do PDF:", error);
-      throw new Error("Falha na leitura do PDF. O arquivo pode estar corrompido ou protegido.");
+      throw new Error("Falha na leitura do PDF. Tente copiar o texto manualmente.");
     }
   };
 
@@ -89,39 +213,30 @@ const App: React.FC = () => {
     const file = e.target.files?.[0];
     if (!file) return;
     
-    // Validar tipo de arquivo
     if (file.type !== 'application/pdf') {
       setError('Por favor, selecione um arquivo PDF válido.');
       return;
     }
 
-    // Validar tamanho (máximo 10MB)
-    if (file.size > 10 * 1024 * 1024) {
-      setError('O arquivo PDF deve ter no máximo 10MB.');
+    if (file.size > 5 * 1024 * 1024) {
+      setError('O arquivo PDF deve ter no máximo 5MB.');
       return;
     }
 
     setParsingPdf(true);
     setError(null);
-    setSuccessMessage('Iniciando processamento do PDF...');
     
     try {
       const text = await extractTextFromPDF(file);
       
       if (text.trim().length < 50) {
-        setError('Não foi possível extrair texto significativo deste PDF. Tente copiar e colar o conteúdo manualmente.');
+        setError('Pouco texto extraído do PDF. Recomendo copiar e colar manualmente.');
       } else {
         setInputPlan(text);
-        setSuccessMessage(`PDF processado com sucesso! ${text.length} caracteres extraídos.`);
-        
-        // Rolar para o textarea
-        setTimeout(() => {
-          textareaRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
-        }, 300);
+        setSuccessMessage('PDF importado com sucesso!');
       }
     } catch (error) {
-      console.error("Erro ao processar PDF:", error);
-      setError(error instanceof Error ? error.message : 'Erro desconhecido ao processar PDF.');
+      setError(error instanceof Error ? error.message : 'Erro ao processar PDF.');
     } finally {
       setParsingPdf(false);
       if (fileInputRef.current) fileInputRef.current.value = '';
@@ -135,54 +250,63 @@ const App: React.FC = () => {
       return;
     }
 
-    // Validar tamanho mínimo
-    if (inputPlan.trim().length < 100) {
-      setError('Por favor, forneça um texto mais detalhado (mínimo 100 caracteres).');
+    if (inputPlan.trim().length < 50) {
+      setError('Por favor, forneça um texto mais detalhado (mínimo 50 caracteres).');
       textareaRef.current?.focus();
       return;
     }
 
     setLoading(true);
     setError(null);
-    setSuccessMessage('Analisando conteúdo e gerando estrutura pedagógica...');
+    setSuccessMessage('Gerando estrutura pedagógica...');
 
     try {
-      console.log('Iniciando geração do plano...');
+      // Tentar usar a API real
       const data = await generateCoursePlan(inputPlan);
       
       if (!data || !data.modules || data.modules.length === 0) {
-        throw new Error('A API retornou uma estrutura vazia ou inválida.');
+        throw new Error('Estrutura inválida retornada pela API.');
       }
 
       setCourseData(data);
       setActiveModuleId(data.modules[0].id);
       setSuccessMessage(`Plano gerado com sucesso! ${data.modules.length} módulos criados.`);
-      
-      // Rolar para a seção de resultados
-      setTimeout(() => {
-        document.querySelector('main')?.scrollIntoView({ behavior: 'smooth' });
-      }, 100);
+      setUseSampleData(false);
       
     } catch (error) {
-      console.error("Erro detalhado na geração:", error);
+      console.error("Erro na geração:", error);
       
-      const errorMessage = error instanceof Error 
-        ? error.message 
-        : 'Houve um erro ao processar seu plano.';
+      // Se for erro de API key, mostrar dados de exemplo
+      const errorMessage = error instanceof Error ? error.message : '';
       
-      // Verificar se é erro de API key
-      if (errorMessage.includes('API Key') || errorMessage.includes('chave')) {
-        setError(`${errorMessage} Configure sua chave do Google AI no arquivo .env`);
-      } else if (errorMessage.includes('rede') || errorMessage.includes('network')) {
-        setError('Erro de conexão. Verifique sua internet e tente novamente.');
+      if (errorMessage.includes('API key') || errorMessage.includes('API Key')) {
+        setError('API Key não configurada. Usando dados de exemplo para demonstração.');
+        setSuccessMessage('Modo de demonstração ativado com dados de exemplo.');
+        
+        // Usar dados de exemplo
+        setCourseData(SAMPLE_COURSE_DATA);
+        setActiveModuleId(1);
+        setUseSampleData(true);
+        
+        // Mostrar instruções para configurar API key
+        setTimeout(() => {
+          setShowApiKeyInfo(true);
+        }, 1000);
+        
       } else {
-        setError(errorMessage);
+        setError(`Erro: ${errorMessage}. Tente novamente ou use dados de exemplo.`);
       }
-      
-      // Não limpar o input para permitir nova tentativa
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleUseSampleData = () => {
+    setCourseData(SAMPLE_COURSE_DATA);
+    setActiveModuleId(1);
+    setUseSampleData(true);
+    setSuccessMessage('Dados de exemplo carregados com sucesso!');
+    setError(null);
   };
 
   const handleReset = () => {
@@ -192,8 +316,8 @@ const App: React.FC = () => {
     setSuccessMessage(null);
     setSelectedLesson(null);
     setActiveModuleId(null);
+    setUseSampleData(false);
     
-    // Focar no textarea
     setTimeout(() => {
       textareaRef.current?.focus();
     }, 100);
@@ -203,31 +327,64 @@ const App: React.FC = () => {
     window.print();
   };
 
-  const handleKeyDown = (e: React.KeyboardEvent) => {
-    // Ctrl+Enter para gerar
-    if (e.ctrlKey && e.key === 'Enter' && !loading) {
-      handleGenerate();
-    }
-    
-    // Escape para limpar seleção
-    if (e.key === 'Escape' && selectedLesson) {
-      setSelectedLesson(null);
-    }
-  };
+  const wordCount = inputPlan.trim().split(/\s+/).filter(word => word.length > 0).length;
 
   const activeModule = courseData?.modules.find(m => m.id === activeModuleId);
 
-  // Contador de palavras
-  const wordCount = inputPlan.trim().split(/\s+/).filter(word => word.length > 0).length;
-  const charCount = inputPlan.length;
-
   return (
-    <div className="min-h-screen text-slate-900" onKeyDown={handleKeyDown}>
+    <div className="min-h-screen text-slate-900 bg-gradient-to-br from-slate-50 to-blue-50">
+      {/* Modal de Informações da API Key */}
+      {showApiKeyInfo && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
+          <div className="bg-white rounded-3xl max-w-md w-full p-6 shadow-2xl animate-in zoom-in-95">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-lg font-bold text-slate-800 flex items-center gap-2">
+                <Key size={20} /> Configurar API Key
+              </h3>
+              <button onClick={() => setShowApiKeyInfo(false)} className="text-slate-400 hover:text-slate-600">
+                <PlusCircle className="rotate-45" size={24} />
+              </button>
+            </div>
+            
+            <div className="space-y-4">
+              <p className="text-slate-600">
+                Para usar a funcionalidade completa com IA, você precisa configurar uma API Key do Google AI:
+              </p>
+              
+              <div className="bg-amber-50 border border-amber-200 rounded-xl p-4">
+                <ol className="text-sm text-amber-800 space-y-2 list-decimal pl-4">
+                  <li>Acesse <a href="https://makersuite.google.com/app/apikey" target="_blank" className="text-blue-600 hover:underline">Google AI Studio</a></li>
+                  <li>Crie uma nova API Key</li>
+                  <li>Crie um arquivo <code className="bg-amber-100 px-1 rounded">.env</code> na raiz do projeto</li>
+                  <li>Adicione: <code className="bg-slate-100 px-1 rounded">VITE_GOOGLE_AI_API_KEY=sua_chave_aqui</code></li>
+                  <li>Reinicie o servidor de desenvolvimento</li>
+                </ol>
+              </div>
+              
+              <div className="flex gap-3 pt-4">
+                <button
+                  onClick={() => setShowApiKeyInfo(false)}
+                  className="flex-1 py-2 px-4 bg-slate-100 hover:bg-slate-200 text-slate-700 font-medium rounded-xl transition"
+                >
+                  Entendi
+                </button>
+                <button
+                  onClick={handleUseSampleData}
+                  className="flex-1 py-2 px-4 bg-indigo-600 hover:bg-indigo-700 text-white font-medium rounded-xl transition"
+                >
+                  Usar Dados de Exemplo
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Notificações */}
       {(error || successMessage) && (
-        <div className="fixed top-4 right-4 left-4 md:left-auto md:max-w-md z-50 animate-in slide-in-from-top duration-300">
+        <div className="fixed top-4 right-4 left-4 md:left-auto md:max-w-md z-40">
           {error && (
-            <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-xl shadow-lg flex items-start gap-3">
+            <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-xl shadow-lg flex items-start gap-3 animate-in slide-in-from-top">
               <AlertCircle className="shrink-0 mt-0.5" size={20} />
               <div className="flex-1">
                 <p className="font-medium">{error}</p>
@@ -238,7 +395,7 @@ const App: React.FC = () => {
             </div>
           )}
           {successMessage && (
-            <div className="bg-emerald-50 border border-emerald-200 text-emerald-700 px-4 py-3 rounded-xl shadow-lg flex items-start gap-3">
+            <div className="bg-emerald-50 border border-emerald-200 text-emerald-700 px-4 py-3 rounded-xl shadow-lg flex items-start gap-3 animate-in slide-in-from-top">
               <CheckCircle className="shrink-0 mt-0.5" size={20} />
               <div className="flex-1">
                 <p className="font-medium">{successMessage}</p>
@@ -251,487 +408,428 @@ const App: React.FC = () => {
         </div>
       )}
 
-      <header className="sticky top-0 z-40 glass-effect border-b border-slate-200 py-4 px-6 mb-8">
+      <header className="sticky top-0 z-30 bg-white/80 backdrop-blur-sm border-b border-slate-200 py-4 px-6">
         <div className="max-w-7xl mx-auto flex justify-between items-center">
           <div className="flex items-center gap-3">
-            <div className="bg-gradient-to-br from-indigo-600 to-purple-600 p-2 rounded-xl text-white shadow-lg shadow-indigo-200">
+            <div className="bg-gradient-to-br from-indigo-600 to-purple-600 p-2 rounded-xl text-white shadow-lg">
               <BookOpen size={24} />
             </div>
             <div>
-              <h1 className="text-xl font-bold tracking-tight text-slate-800">EduPlanner <span className="text-indigo-600">AI</span></h1>
-              <p className="text-xs text-slate-500 hidden sm:block">Gerador Inteligente de Planos de Aula</p>
+              <h1 className="text-xl font-bold text-slate-800">EduPlanner <span className="text-indigo-600">AI</span></h1>
+              <p className="text-xs text-slate-500">Gerador Inteligente de Planos de Aula</p>
             </div>
           </div>
-          <div className="hidden md:block">
-            <p className="text-sm text-slate-500 font-medium italic">Transformando conhecimento em jornada pedagógica.</p>
-          </div>
-          {courseData && (
-            <button
-              onClick={handleReset}
-              className="text-sm text-slate-500 hover:text-indigo-600 font-medium flex items-center gap-1"
-            >
-              <ArrowRight size={14} className="rotate-180" /> Novo Plano
-            </button>
+          
+          {useSampleData && (
+            <div className="flex items-center gap-2 px-3 py-1 bg-amber-100 text-amber-800 rounded-full text-xs font-medium">
+              <Info size={12} /> Modo Demonstração
+            </div>
           )}
         </div>
       </header>
 
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 pb-12">
-        {!courseData && !loading ? (
-          <div className="max-w-4xl mx-auto space-y-8 animate-in fade-in duration-700">
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 py-8">
+        {!courseData ? (
+          <div className="max-w-4xl mx-auto space-y-8">
             <div className="text-center space-y-4">
-              <h2 className="text-3xl md:text-4xl lg:text-5xl font-black text-slate-800 leading-tight">
-                Crie o plano de aula <span className="text-indigo-600">perfeito</span> em segundos.
+              <h2 className="text-3xl md:text-4xl font-bold text-slate-800">
+                Crie planos de aula <span className="text-indigo-600">perfeitos</span> em minutos
               </h2>
-              <p className="text-base md:text-lg text-slate-600 max-w-2xl mx-auto">
-                Insira sua ementa, tópicos ou carregue seu plano de curso em <span className="font-bold text-indigo-600">PDF</span>.
+              <p className="text-slate-600 max-w-2xl mx-auto">
+                Transforme ementas em estruturas pedagógicas completas com metodologias ativas e competências mapeadas.
               </p>
             </div>
 
-            <div className="bg-white rounded-3xl shadow-2xl shadow-slate-200 border border-slate-100 p-6 md:p-8 space-y-6">
-              <div className="space-y-4">
-                <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
+            <div className="bg-white rounded-2xl shadow-lg border border-slate-200 p-6 space-y-6">
+              {/* API Key Alert */}
+              <div className="bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-xl p-4">
+                <div className="flex items-start gap-3">
+                  <Settings className="text-blue-600 mt-0.5" size={20} />
                   <div className="flex-1">
-                    <label className="text-sm font-bold text-slate-700 uppercase tracking-wider block mb-1">
-                      Esboço do Plano de Curso
-                    </label>
-                    <div className="flex items-center gap-2 text-xs text-slate-500">
-                      <Info size={12} />
-                      <span>Identificação inteligente de carga horária (4h por aula)</span>
-                    </div>
-                  </div>
-                  
-                  <div className="flex gap-2">
-                    <button
-                      onClick={() => fileInputRef.current?.click()}
-                      disabled={parsingPdf}
-                      className="flex items-center gap-2 text-xs font-bold text-indigo-600 hover:text-indigo-700 transition-colors bg-indigo-50 px-3 py-2 rounded-lg border border-indigo-100 hover:bg-indigo-100 disabled:opacity-50 disabled:cursor-not-allowed"
-                    >
-                      {parsingPdf ? (
-                        <Loader2 size={14} className="animate-spin" />
-                      ) : (
-                        <Upload size={14} />
-                      )}
-                      {parsingPdf ? "Processando..." : "Importar PDF"}
-                    </button>
-                    <input 
-                      type="file" 
-                      ref={fileInputRef} 
-                      onChange={handleFileChange} 
-                      accept=".pdf" 
-                      className="hidden" 
-                    />
-                    
-                    {inputPlan && (
+                    <h4 className="font-bold text-blue-800 mb-1">Configuração da API Key</h4>
+                    <p className="text-sm text-blue-700 mb-2">
+                      Para usar a IA, configure sua chave do Google AI. Ou use nossos dados de exemplo para testar.
+                    </p>
+                    <div className="flex gap-3">
                       <button
-                        onClick={() => setInputPlan('')}
-                        className="text-xs font-bold text-slate-500 hover:text-slate-700 bg-slate-100 px-3 py-2 rounded-lg border border-slate-200 hover:bg-slate-200"
+                        onClick={() => setShowApiKeyInfo(true)}
+                        className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-lg transition"
                       >
-                        Limpar
+                        Como Configurar
                       </button>
-                    )}
-                  </div>
-                </div>
-
-                <div className="relative">
-                  <textarea
-                    ref={textareaRef}
-                    className="w-full h-64 p-6 rounded-2xl border border-slate-200 focus:ring-4 focus:ring-indigo-100 focus:border-indigo-400 transition-all outline-none text-base leading-relaxed placeholder:text-slate-300 resize-y"
-                    placeholder="Cole aqui seu plano ou ementa, ou clique em 'Importar PDF' acima..."
-                    value={inputPlan}
-                    onChange={(e) => setInputPlan(e.target.value)}
-                    disabled={parsingPdf}
-                  />
-                  
-                  {/* Contador */}
-                  {inputPlan && (
-                    <div className="absolute bottom-3 right-3 text-xs text-slate-400 bg-white/90 px-2 py-1 rounded">
-                      {wordCount} palavras • {charCount} caracteres
+                      <button
+                        onClick={handleUseSampleData}
+                        className="px-4 py-2 bg-white border border-blue-300 text-blue-700 text-sm font-medium rounded-lg hover:bg-blue-50 transition"
+                      >
+                        Usar Dados de Exemplo
+                      </button>
                     </div>
-                  )}
+                  </div>
                 </div>
+              </div>
 
-                <div className="flex flex-col sm:flex-row gap-3">
-                  <button
-                    onClick={handleGenerate}
-                    disabled={!inputPlan.trim() || parsingPdf || loading}
-                    className="flex-1 py-3 px-6 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 disabled:from-slate-300 disabled:to-slate-400 disabled:cursor-not-allowed text-white font-bold rounded-2xl shadow-xl shadow-indigo-100 flex items-center justify-center gap-3 transition-all transform hover:scale-[1.01] active:scale-95"
-                  >
-                    <Sparkles size={20} />
-                    {loading ? 'Gerando...' : 'Gerar Estrutura Pedagógica Completa'}
-                  </button>
+              <div className="space-y-4">
+                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                  <div>
+                    <label className="block text-sm font-semibold text-slate-700 mb-1">
+                      Sua Ementa ou Plano de Curso
+                    </label>
+                    <p className="text-xs text-slate-500">Cole o texto ou importe um PDF</p>
+                  </div>
                   
-                  <div className="text-xs text-slate-500 flex items-center gap-2 px-3">
-                    <kbd className="px-2 py-1 bg-slate-100 rounded border border-slate-200">Ctrl</kbd>
-                    <span>+</span>
-                    <kbd className="px-2 py-1 bg-slate-100 rounded border border-slate-200">Enter</kbd>
-                    <span>para gerar rápido</span>
+                  <button
+                    onClick={() => fileInputRef.current?.click()}
+                    disabled={parsingPdf}
+                    className="flex items-center gap-2 px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg border border-slate-300 transition disabled:opacity-50"
+                  >
+                    {parsingPdf ? (
+                      <Loader2 size={16} className="animate-spin" />
+                    ) : (
+                      <Upload size={16} />
+                    )}
+                    {parsingPdf ? 'Processando...' : 'Importar PDF'}
+                  </button>
+                  <input 
+                    type="file" 
+                    ref={fileInputRef} 
+                    onChange={handleFileChange} 
+                    accept=".pdf" 
+                    className="hidden" 
+                  />
+                </div>
+
+                <textarea
+                  ref={textareaRef}
+                  className="w-full h-64 p-4 rounded-xl border border-slate-300 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 outline-none transition resize-y"
+                  placeholder="Cole aqui a ementa do seu curso, objetivos, conteúdo programático..."
+                  value={inputPlan}
+                  onChange={(e) => setInputPlan(e.target.value)}
+                  disabled={parsingPdf}
+                />
+
+                <div className="flex flex-col sm:flex-row justify-between items-center gap-4">
+                  <div className="text-sm text-slate-500">
+                    {wordCount} palavras • {inputPlan.length} caracteres
+                  </div>
+                  
+                  <div className="flex gap-3">
+                    <button
+                      onClick={handleUseSampleData}
+                      className="px-6 py-3 bg-slate-100 hover:bg-slate-200 text-slate-700 font-medium rounded-xl border border-slate-300 transition"
+                    >
+                      Ver Exemplo
+                    </button>
+                    <button
+                      onClick={handleGenerate}
+                      disabled={!inputPlan.trim() || parsingPdf}
+                      className="px-6 py-3 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white font-medium rounded-xl shadow-lg transition disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+                    >
+                      <Sparkles size={18} />
+                      {loading ? 'Gerando...' : 'Gerar Plano'}
+                    </button>
                   </div>
                 </div>
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 pt-6 border-t border-slate-50">
-                <div className="flex items-center gap-3 text-sm text-slate-500 p-3 bg-slate-50 rounded-xl">
-                  <div className="w-10 h-10 rounded-full bg-blue-50 flex items-center justify-center text-blue-600">
-                    <Target size={18} />
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 pt-6 border-t border-slate-100">
+                <div className="text-center p-4 bg-slate-50 rounded-xl">
+                  <div className="w-12 h-12 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center mx-auto mb-3">
+                    <Target size={24} />
                   </div>
-                  <div>
-                    <div className="font-medium">Mapeamento de Competências</div>
-                    <div className="text-xs text-slate-400">Alinhamento BNCC/DC</div>
-                  </div>
+                  <h4 className="font-semibold text-slate-700">Competências Mapeadas</h4>
+                  <p className="text-sm text-slate-500 mt-1">Alinhamento com BNCC e DC</p>
                 </div>
-                <div className="flex items-center gap-3 text-sm text-slate-500 p-3 bg-slate-50 rounded-xl">
-                  <div className="w-10 h-10 rounded-full bg-purple-50 flex items-center justify-center text-purple-600">
-                    <Lightbulb size={18} />
+                <div className="text-center p-4 bg-slate-50 rounded-xl">
+                  <div className="w-12 h-12 bg-purple-100 text-purple-600 rounded-full flex items-center justify-center mx-auto mb-3">
+                    <Lightbulb size={24} />
                   </div>
-                  <div>
-                    <div className="font-medium">Metodologias Ativas</div>
-                    <div className="text-xs text-slate-400">Aprendizagem baseada em problemas</div>
-                  </div>
+                  <h4 className="font-semibold text-slate-700">Metodologias Ativas</h4>
+                  <p className="text-sm text-slate-500 mt-1">ABP, Gamificação, Sala Invertida</p>
                 </div>
-                <div className="flex items-center gap-3 text-sm text-slate-500 p-3 bg-slate-50 rounded-xl">
-                  <div className="w-10 h-10 rounded-full bg-emerald-50 flex items-center justify-center text-emerald-600">
-                    <ClipboardCheck size={18} />
+                <div className="text-center p-4 bg-slate-50 rounded-xl">
+                  <div className="w-12 h-12 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center mx-auto mb-3">
+                    <ClipboardCheck size={24} />
                   </div>
-                  <div>
-                    <div className="font-medium">Aulas de 4 Horas</div>
-                    <div className="text-xs text-slate-400">Fiel à carga horária original</div>
-                  </div>
+                  <h4 className="font-semibold text-slate-700">Aulas de 4 Horas</h4>
+                  <p className="text-sm text-slate-500 mt-1">Carga horária otimizada</p>
                 </div>
               </div>
-            </div>
-
-            {/* Dicas */}
-            <div className="bg-gradient-to-r from-indigo-50 to-purple-50 rounded-2xl p-6 border border-indigo-100">
-              <h3 className="font-bold text-indigo-700 mb-2 flex items-center gap-2">
-                <Lightbulb size={18} /> Dicas para um plano eficaz:
-              </h3>
-              <ul className="text-sm text-indigo-600 space-y-1 list-disc pl-5">
-                <li>Inclua objetivos claros e mensuráveis</li>
-                <li>Descreva o público-alvo e pré-requisitos</li>
-                <li>Mencione recursos e materiais necessários</li>
-                <li>Inclua métodos de avaliação</li>
-                <li>Especifique a carga horária total</li>
-              </ul>
             </div>
           </div>
         ) : loading ? (
-          <div className="flex flex-col items-center justify-center py-24 space-y-8">
+          <div className="flex flex-col items-center justify-center py-20">
             <div className="relative">
-              <div className="w-24 h-24 border-8 border-indigo-100 border-t-indigo-600 rounded-full animate-spin"></div>
-              <Sparkles className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-indigo-600 animate-pulse" size={32} />
+              <div className="w-20 h-20 border-4 border-indigo-100 border-t-indigo-600 rounded-full animate-spin"></div>
+              <Sparkles className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-indigo-600" size={24} />
             </div>
-            <div className="text-center space-y-2 max-w-lg">
-              <h3 className="text-2xl font-bold text-slate-800">Gerando sua estrutura pedagógica...</h3>
-              <p className="text-slate-500">Analisando conteúdo, calculando carga horária e criando atividades.</p>
-              <div className="pt-4">
-                <div className="h-2 bg-slate-200 rounded-full overflow-hidden">
-                  <div className="h-full bg-gradient-to-r from-indigo-500 to-purple-500 animate-pulse w-3/4"></div>
-                </div>
-                <p className="text-xs text-slate-400 mt-2">Isso pode levar alguns segundos</p>
-              </div>
+            <div className="text-center mt-6 space-y-2">
+              <h3 className="text-xl font-bold text-slate-800">Gerando seu plano...</h3>
+              <p className="text-slate-500">Analisando conteúdo e estruturando as aulas</p>
             </div>
           </div>
         ) : (
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 animate-in slide-in-from-bottom-4 duration-500">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
             {/* Sidebar */}
-            <aside className="lg:col-span-4 space-y-6">
+            <div className="lg:col-span-1 space-y-6">
               {/* Informações do Curso */}
-              <div className="bg-white rounded-3xl p-6 shadow-sm border border-slate-200">
-                <div className="space-y-4">
+              <div className="bg-white rounded-2xl p-5 shadow border border-slate-200">
+                <div className="flex justify-between items-start mb-4">
                   <div>
-                    <h3 className="text-sm font-bold text-slate-400 uppercase tracking-widest mb-2">Informações do Curso</h3>
-                    <h2 className="text-xl font-black text-slate-800 mb-2 leading-tight">{courseData?.courseName}</h2>
-                    <p className="text-sm text-slate-500 line-clamp-3">{courseData?.description}</p>
+                    <h3 className="text-sm font-semibold text-slate-500 uppercase tracking-wide">Curso</h3>
+                    <h2 className="text-xl font-bold text-slate-800 mt-1">{courseData.courseName}</h2>
                   </div>
-                  
-                  <div className="flex flex-wrap gap-2 pt-4 border-t border-slate-50">
-                    <div className="flex items-center gap-1.5 px-3 py-1.5 bg-indigo-50 rounded-full text-xs font-bold text-indigo-700">
-                      <Clock size={12} /> {courseData?.totalDuration}
-                    </div>
-                    <div className="flex items-center gap-1.5 px-3 py-1.5 bg-slate-100 rounded-full text-xs font-bold text-slate-600">
-                      <Users size={12} /> {courseData?.targetAudience}
-                    </div>
-                  </div>
+                  <button
+                    onClick={handleReset}
+                    className="text-slate-400 hover:text-slate-600"
+                    title="Novo plano"
+                  >
+                    <ArrowRight className="rotate-180" size={20} />
+                  </button>
+                </div>
+                
+                <p className="text-sm text-slate-600 mb-4">{courseData.description}</p>
+                
+                <div className="flex flex-wrap gap-2">
+                  <span className="inline-flex items-center gap-1 px-3 py-1 bg-indigo-100 text-indigo-700 rounded-full text-xs font-medium">
+                    <Clock size={12} /> {courseData.totalDuration}
+                  </span>
+                  <span className="inline-flex items-center gap-1 px-3 py-1 bg-slate-100 text-slate-700 rounded-full text-xs font-medium">
+                    <Users size={12} /> {courseData.targetAudience}
+                  </span>
                 </div>
               </div>
 
               {/* Módulos */}
-              <div className="bg-white rounded-3xl overflow-hidden shadow-sm border border-slate-200">
-                <div className="bg-gradient-to-r from-slate-50 to-white px-6 py-4 border-b border-slate-200">
-                  <h3 className="text-sm font-bold text-slate-600 uppercase tracking-widest">Cronograma de Módulos</h3>
-                  <p className="text-xs text-slate-400 mt-1">{courseData?.modules.length} módulos • {courseData?.modules.reduce((acc, mod) => acc + mod.lessons.length, 0)} aulas</p>
+              <div className="bg-white rounded-2xl overflow-hidden shadow border border-slate-200">
+                <div className="bg-slate-50 px-5 py-4 border-b border-slate-200">
+                  <h3 className="font-semibold text-slate-700">Módulos do Curso</h3>
+                  <p className="text-xs text-slate-500 mt-1">{courseData.modules.length} módulos • {courseData.modules.reduce((total, mod) => total + mod.lessons.length, 0)} aulas</p>
                 </div>
-                <div className="divide-y divide-slate-100 max-h-[500px] overflow-y-auto">
-                  {courseData?.modules.map((mod) => (
+                <div className="divide-y divide-slate-100">
+                  {courseData.modules.map((module) => (
                     <button
-                      key={mod.id}
-                      onClick={() => setActiveModuleId(mod.id)}
-                      className={`w-full text-left px-6 py-4 transition-all duration-200 flex items-center justify-between group ${activeModuleId === mod.id ? 'bg-indigo-50 border-r-4 border-indigo-600' : 'hover:bg-slate-50'}`}
+                      key={module.id}
+                      onClick={() => setActiveModuleId(module.id)}
+                      className={`w-full text-left px-5 py-4 transition-colors ${activeModuleId === module.id ? 'bg-indigo-50' : 'hover:bg-slate-50'}`}
                     >
-                      <div className="space-y-1 flex-1">
-                        <div className="flex items-center justify-between">
-                          <span className="text-[10px] font-black text-indigo-500 uppercase">Módulo {mod.id}</span>
-                          <span className="text-xs text-slate-400">{mod.duration}</span>
+                      <div className="flex items-center justify-between">
+                        <div className="space-y-1">
+                          <div className="flex items-center gap-2">
+                            <span className="text-xs font-bold text-indigo-600">Módulo {module.id}</span>
+                            <span className="text-xs text-slate-400">{module.duration}</span>
+                          </div>
+                          <h4 className="font-medium text-slate-700">{module.title}</h4>
+                          <div className="text-xs text-slate-400 flex items-center gap-1">
+                            <FileText size={12} />
+                            {module.lessons.length} aulas
+                          </div>
                         </div>
-                        <h4 className={`font-bold text-sm ${activeModuleId === mod.id ? 'text-indigo-900' : 'text-slate-700'} line-clamp-2`}>{mod.title}</h4>
-                        <div className="flex items-center gap-1 text-xs text-slate-400">
-                          <FileText size={10} />
-                          <span>{mod.lessons.length} aulas</span>
-                        </div>
+                        <ChevronRight 
+                          size={18} 
+                          className={`transition-transform ${activeModuleId === module.id ? 'text-indigo-500 translate-x-1' : 'text-slate-300'}`}
+                        />
                       </div>
-                      <ChevronRight className={`transition-transform ${activeModuleId === mod.id ? 'translate-x-1 text-indigo-600' : 'text-slate-300 group-hover:translate-x-1'}`} size={18} />
                     </button>
                   ))}
                 </div>
               </div>
 
               {/* Competências */}
-              {courseData?.competencies && courseData.competencies.length > 0 && (
-                <div className="bg-gradient-to-br from-indigo-900 to-purple-900 rounded-3xl p-6 text-white shadow-xl shadow-indigo-200">
-                  <h3 className="text-sm font-bold text-indigo-300 uppercase tracking-widest mb-4 flex items-center gap-2">
-                    <Target size={16} /> Competências Alvo
-                  </h3>
+              {courseData.competencies && courseData.competencies.length > 0 && (
+                <div className="bg-gradient-to-br from-slate-800 to-slate-900 rounded-2xl p-5 text-white">
+                  <h3 className="font-semibold text-slate-200 mb-4">Competências Desenvolvidas</h3>
                   <div className="space-y-3">
-                    {courseData.competencies.slice(0, 5).map((comp) => (
-                      <div key={comp.id} className="group cursor-help">
-                        <div className="flex items-start gap-3 p-3 bg-white/10 rounded-xl hover:bg-white/15 transition-colors">
-                          <div className="w-6 h-6 bg-gradient-to-br from-indigo-500 to-purple-500 rounded flex items-center justify-center shrink-0 text-xs font-black">
+                    {courseData.competencies.slice(0, 4).map((comp) => (
+                      <div key={comp.id} className="p-3 bg-white/10 rounded-lg">
+                        <div className="flex items-start gap-3">
+                          <div className="w-6 h-6 bg-indigo-500 rounded flex items-center justify-center text-xs font-bold shrink-0">
                             {comp.id}
                           </div>
                           <div>
-                            <p className="text-sm font-medium text-indigo-100 leading-relaxed">{comp.description}</p>
-                            <div className="mt-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                              <p className="text-xs text-indigo-300">{comp.knowledgeRelationship}</p>
-                            </div>
+                            <p className="text-sm font-medium">{comp.description}</p>
+                            <p className="text-xs text-slate-300 mt-1">{comp.knowledgeRelationship}</p>
                           </div>
                         </div>
                       </div>
                     ))}
-                    {courseData.competencies.length > 5 && (
-                      <div className="text-center pt-2">
-                        <span className="text-xs text-indigo-300">+ {courseData.competencies.length - 5} competências</span>
-                      </div>
-                    )}
                   </div>
                 </div>
               )}
-            </aside>
+            </div>
 
             {/* Conteúdo Principal */}
-            <section className="lg:col-span-8 space-y-6">
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-2">
-                <div>
-                  <h2 className="text-xl md:text-2xl font-black text-slate-800 flex items-center gap-3">
-                    <PlusCircle className="text-indigo-600" />
-                    {activeModule?.title || "Selecione um módulo"}
-                  </h2>
-                  {activeModule && (
-                    <p className="text-sm text-slate-500 mt-1">{activeModule.duration} • {activeModule.lessons.length} aulas</p>
-                  )}
-                </div>
-                <div className="flex gap-2">
-                  <button 
-                    onClick={handlePrint}
-                    className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-white border border-slate-200 text-slate-600 hover:bg-slate-50 transition-colors shadow-sm font-medium"
-                  >
-                    <Download size={18} />
-                    Exportar
-                  </button>
-                  <button 
-                    onClick={handleReset}
-                    className="px-4 py-2.5 rounded-xl bg-slate-100 border border-slate-200 text-slate-700 hover:bg-slate-200 transition-colors shadow-sm font-medium"
-                  >
-                    Novo Plano
-                  </button>
-                </div>
-              </div>
-
-              {/* Aulas */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {activeModule?.lessons.map((lesson) => (
-                  <div
-                    key={lesson.id}
-                    className="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm hover:shadow-md transition-all group cursor-pointer"
-                    onClick={() => setSelectedLesson(lesson)}
-                  >
-                    <div className="flex justify-between items-start mb-3">
-                      <div className="flex items-center gap-2">
-                        <span className="px-3 py-1 bg-gradient-to-r from-indigo-100 to-purple-100 text-indigo-600 rounded-full text-xs font-black">Aula {lesson.id}</span>
-                        <span className="text-xs text-slate-400 font-medium">{lesson.duration}</span>
-                      </div>
-                      <ArrowRight className="text-slate-300 group-hover:text-indigo-400 group-hover:translate-x-1 transition-all" size={16} />
-                    </div>
-                    <h3 className="font-bold text-slate-800 group-hover:text-indigo-600 transition-colors line-clamp-2 mb-3">{lesson.title}</h3>
-                    <p className="text-sm text-slate-500 line-clamp-2 mb-4">{lesson.content}</p>
-                    
-                    <div className="flex flex-wrap gap-1 mb-3">
-                      {lesson.competenciesIds.slice(0, 3).map(cid => (
-                        <span key={cid} className="text-[10px] font-bold text-slate-500 bg-slate-50 border border-slate-100 px-2 py-1 rounded">C-{cid}</span>
-                      ))}
-                      {lesson.competenciesIds.length > 3 && (
-                        <span className="text-[10px] text-slate-400">+{lesson.competenciesIds.length - 3}</span>
-                      )}
-                    </div>
-                    
-                    <div className="flex items-center gap-2 text-xs font-medium text-indigo-600 group-hover:gap-3 transition-all">
-                      Ver detalhes completos
-                      <ArrowRight size={14} />
-                    </div>
+            <div className="lg:col-span-2 space-y-6">
+              <div className="bg-white rounded-2xl p-5 shadow border border-slate-200">
+                <div className="flex justify-between items-center mb-6">
+                  <div>
+                    <h2 className="text-xl font-bold text-slate-800">
+                      {activeModule?.title || 'Selecione um módulo'}
+                    </h2>
+                    {activeModule && (
+                      <p className="text-sm text-slate-500 mt-1">
+                        {activeModule.duration} • {activeModule.lessons.length} aulas
+                      </p>
+                    )}
                   </div>
-                ))}
+                  <div className="flex gap-2">
+                    <button
+                      onClick={handlePrint}
+                      className="flex items-center gap-2 px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg border border-slate-300 transition"
+                    >
+                      <Download size={16} />
+                      Exportar
+                    </button>
+                  </div>
+                </div>
+
+                {/* Aulas */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {activeModule?.lessons.map((lesson) => (
+                    <div
+                      key={lesson.id}
+                      className="border border-slate-200 rounded-xl p-4 hover:border-indigo-300 hover:shadow-md transition-all cursor-pointer"
+                      onClick={() => setSelectedLesson(lesson)}
+                    >
+                      <div className="flex justify-between items-start mb-3">
+                        <span className="px-3 py-1 bg-indigo-100 text-indigo-700 rounded-full text-xs font-bold">
+                          Aula {lesson.id}
+                        </span>
+                        <span className="text-xs text-slate-500">{lesson.duration}</span>
+                      </div>
+                      <h3 className="font-bold text-slate-800 mb-2">{lesson.title}</h3>
+                      <p className="text-sm text-slate-600 mb-3 line-clamp-2">{lesson.content}</p>
+                      <div className="flex justify-between items-center">
+                        <div className="flex gap-1">
+                          {lesson.competenciesIds.slice(0, 2).map((cid) => (
+                            <span key={cid} className="text-xs bg-slate-100 text-slate-600 px-2 py-1 rounded">
+                              C-{cid}
+                            </span>
+                          ))}
+                        </div>
+                        <ArrowRight size={16} className="text-slate-400" />
+                      </div>
+                    </div>
+                  ))}
+                </div>
               </div>
 
-              {/* Resumo do Módulo */}
-              {activeModule && (
-                <div className="bg-gradient-to-r from-slate-50 to-white rounded-2xl p-6 border border-slate-200">
-                  <h4 className="font-bold text-slate-700 mb-3 flex items-center gap-2">
-                    <Info size={18} />
-                    Sobre este módulo
-                  </h4>
-                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                    <div className="text-center p-3 bg-white rounded-xl border border-slate-100">
-                      <div className="text-2xl font-black text-indigo-600">{activeModule.lessons.length}</div>
-                      <div className="text-xs text-slate-500">Aulas</div>
-                    </div>
-                    <div className="text-center p-3 bg-white rounded-xl border border-slate-100">
-                      <div className="text-2xl font-black text-indigo-600">{activeModule.duration}</div>
-                      <div className="text-xs text-slate-500">Duração</div>
-                    </div>
-                    <div className="text-center p-3 bg-white rounded-xl border border-slate-100">
-                      <div className="text-2xl font-black text-indigo-600">
-                        {new Set(activeModule.lessons.flatMap(l => l.competenciesIds)).size}
-                      </div>
-                      <div className="text-xs text-slate-500">Competências</div>
-                    </div>
-                    <div className="text-center p-3 bg-white rounded-xl border border-slate-100">
-                      <div className="text-2xl font-black text-indigo-600">
-                        {activeModule.lessons.filter(l => l.methodology.toLowerCase().includes('ativa')).length}
-                      </div>
-                      <div className="text-xs text-slate-500">Metod. Ativas</div>
+              {/* Se usar dados de exemplo, mostrar alerta */}
+              {useSampleData && (
+                <div className="bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-xl p-4">
+                  <div className="flex items-center gap-3">
+                    <Info className="text-blue-600" size={20} />
+                    <div>
+                      <h4 className="font-bold text-blue-800">Modo de Demonstração</h4>
+                      <p className="text-sm text-blue-700">
+                        Você está visualizando dados de exemplo. Para usar a IA real, 
+                        <button 
+                          onClick={() => setShowApiKeyInfo(true)}
+                          className="text-blue-600 hover:text-blue-800 font-medium underline ml-1"
+                        >
+                          configure sua API Key
+                        </button>
+                        .
+                      </p>
                     </div>
                   </div>
                 </div>
               )}
-            </section>
+            </div>
           </div>
         )}
 
         {/* Modal de Detalhes da Aula */}
         {selectedLesson && (
           <div 
-            className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-sm animate-in fade-in"
-            onClick={(e) => {
-              if (e.target === e.currentTarget) setSelectedLesson(null);
-            }}
+            className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm"
+            onClick={(e) => e.target === e.currentTarget && setSelectedLesson(null)}
           >
-            <div className="bg-white w-full max-w-4xl max-h-[90vh] overflow-y-auto rounded-3xl shadow-2xl relative animate-in zoom-in-95 duration-300">
-              <button 
-                onClick={() => setSelectedLesson(null)}
-                className="absolute top-6 right-6 z-10 p-2 rounded-full bg-white shadow-lg text-slate-400 hover:text-slate-600 transition-colors"
-                aria-label="Fechar"
-              >
-                <PlusCircle className="rotate-45" size={24} />
-              </button>
-
-              <div className="p-6 md:p-8 space-y-8">
-                {/* Cabeçalho */}
-                <div className="space-y-4 border-b border-slate-100 pb-6">
-                  <div className="flex flex-wrap items-center gap-3">
-                    <span className="px-4 py-1.5 bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-full text-xs font-black uppercase tracking-widest">
-                      Aula {selectedLesson.id}
-                    </span>
-                    <span className="text-slate-500 font-medium flex items-center gap-1">
-                      <Clock size={14} /> {selectedLesson.duration}
-                    </span>
+            <div className="bg-white rounded-2xl max-w-3xl w-full max-h-[90vh] overflow-y-auto">
+              <div className="p-6 space-y-6">
+                <div className="flex justify-between items-start">
+                  <div>
+                    <div className="flex items-center gap-3 mb-2">
+                      <span className="px-3 py-1 bg-indigo-600 text-white rounded-full text-xs font-bold">
+                        Aula {selectedLesson.id}
+                      </span>
+                      <span className="text-slate-500">{selectedLesson.duration}</span>
+                    </div>
+                    <h2 className="text-2xl font-bold text-slate-800">{selectedLesson.title}</h2>
                   </div>
-                  <h2 className="text-2xl md:text-3xl font-black text-slate-800 leading-tight">{selectedLesson.title}</h2>
-                  <p className="text-lg text-slate-600 leading-relaxed">{selectedLesson.content}</p>
+                  <button
+                    onClick={() => setSelectedLesson(null)}
+                    className="text-slate-400 hover:text-slate-600"
+                  >
+                    <PlusCircle className="rotate-45" size={24} />
+                  </button>
                 </div>
 
-                {/* Conteúdo Principal */}
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-                  {/* Coluna Esquerda */}
-                  <div className="space-y-8">
-                    {/* Objetivos */}
-                    <section className="space-y-4">
-                      <h4 className="text-sm font-black text-indigo-600 uppercase tracking-widest flex items-center gap-2">
-                        <Target size={18} /> Objetivos de Aprendizagem
+                <div>
+                  <h3 className="font-semibold text-slate-700 mb-2">Conteúdo</h3>
+                  <p className="text-slate-600">{selectedLesson.content}</p>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div className="space-y-4">
+                    <div>
+                      <h4 className="font-semibold text-indigo-600 mb-2 flex items-center gap-2">
+                        <Target size={16} /> Objetivos
                       </h4>
-                      <ul className="space-y-3">
+                      <ul className="space-y-2">
                         {selectedLesson.objectives.map((obj, i) => (
-                          <li key={i} className="flex gap-3 p-3 bg-indigo-50 rounded-xl">
-                            <div className="w-6 h-6 bg-indigo-600 text-white rounded-full flex items-center justify-center shrink-0 text-xs font-bold">
-                              {i + 1}
-                            </div>
-                            <span className="text-sm text-slate-700 font-medium">{obj}</span>
+                          <li key={i} className="flex gap-2 text-sm text-slate-700">
+                            <span className="text-indigo-500">•</span>
+                            {obj}
                           </li>
                         ))}
                       </ul>
-                    </section>
-
-                    {/* Avaliação */}
-                    <section className="space-y-4">
-                      <h4 className="text-sm font-black text-emerald-600 uppercase tracking-widest flex items-center gap-2">
-                        <ClipboardCheck size={18} /> Avaliação
+                    </div>
+                    <div>
+                      <h4 className="font-semibold text-emerald-600 mb-2 flex items-center gap-2">
+                        <ClipboardCheck size={16} /> Avaliação
                       </h4>
-                      <div className="p-4 bg-emerald-50 border border-emerald-100 rounded-2xl">
-                        <p className="text-sm text-emerald-800 font-medium">{selectedLesson.assessment}</p>
-                      </div>
-                    </section>
+                      <p className="text-sm text-slate-700 bg-emerald-50 p-3 rounded-lg">
+                        {selectedLesson.assessment}
+                      </p>
+                    </div>
                   </div>
 
-                  {/* Coluna Direita */}
-                  <div className="space-y-8">
-                    {/* Metodologia */}
-                    <section className="space-y-4">
-                      <h4 className="text-sm font-black text-purple-600 uppercase tracking-widest flex items-center gap-2">
-                        <Lightbulb size={18} /> Metodologia e Estratégia
+                  <div className="space-y-4">
+                    <div>
+                      <h4 className="font-semibold text-purple-600 mb-2 flex items-center gap-2">
+                        <Lightbulb size={16} /> Metodologia
                       </h4>
-                      <div className="bg-gradient-to-br from-purple-50 to-pink-50 p-5 rounded-2xl border border-purple-100 space-y-4">
-                        <div className="space-y-2">
-                          <div className="text-xs font-black text-purple-500 uppercase">Metodologia Principal</div>
-                          <p className="text-base font-bold text-purple-900">{selectedLesson.methodology}</p>
-                        </div>
-                        <div className="space-y-2">
-                          <div className="text-xs font-black text-purple-500 uppercase">Estratégias de Ensino</div>
-                          <p className="text-sm text-purple-800 leading-relaxed">{selectedLesson.strategy}</p>
-                        </div>
+                      <div className="bg-purple-50 p-3 rounded-lg">
+                        <p className="font-medium text-purple-800 mb-1">{selectedLesson.methodology}</p>
+                        <p className="text-sm text-purple-700">{selectedLesson.strategy}</p>
                       </div>
-                    </section>
-
-                    {/* Competências */}
-                    <section className="space-y-4">
-                      <h4 className="text-sm font-black text-slate-600 uppercase tracking-widest">
-                        Competências Desenvolvidas
-                      </h4>
+                    </div>
+                    <div>
+                      <h4 className="font-semibold text-slate-600 mb-2">Competências</h4>
                       <div className="flex flex-wrap gap-2">
-                        {selectedLesson.competenciesIds.map(cid => {
+                        {selectedLesson.competenciesIds.map((cid) => {
                           const comp = courseData?.competencies.find(c => c.id === cid);
                           return (
-                            <div 
-                              key={cid} 
-                              className="group relative"
+                            <span 
+                              key={cid}
+                              className="px-3 py-1 bg-slate-100 text-slate-700 rounded-lg text-sm"
                               title={comp?.description}
                             >
-                              <div className="px-4 py-2 bg-gradient-to-r from-slate-100 to-slate-50 border border-slate-200 rounded-xl text-sm font-bold text-slate-700 hover:from-white hover:to-white hover:border-indigo-300 hover:text-indigo-700 transition-all cursor-help">
-                                C-{cid}: {comp?.description.substring(0, 20)}...
-                              </div>
-                            </div>
+                              C-{cid}: {comp?.description.substring(0, 20)}...
+                            </span>
                           );
                         })}
                       </div>
-                    </section>
+                    </div>
                   </div>
                 </div>
 
-                {/* Botão Fechar */}
-                <div className="pt-6 border-t border-slate-100">
-                  <button 
+                <div className="pt-4 border-t border-slate-200">
+                  <button
                     onClick={() => setSelectedLesson(null)}
-                    className="w-full py-3 bg-gradient-to-r from-slate-100 to-slate-50 hover:from-slate-200 hover:to-slate-100 text-slate-700 font-bold rounded-xl transition-all"
+                    className="w-full py-3 bg-slate-100 hover:bg-slate-200 text-slate-700 font-medium rounded-lg transition"
                   >
-                    Fechar Detalhes
+                    Fechar
                   </button>
                 </div>
               </div>
@@ -740,10 +838,15 @@ const App: React.FC = () => {
         )}
       </main>
 
-      <footer className="py-8 border-t border-slate-200 bg-slate-50">
+      <footer className="py-6 border-t border-slate-200 bg-white">
         <div className="max-w-7xl mx-auto px-6 text-center">
-          <p className="text-slate-400 text-sm">© {new Date().getFullYear()} EduPlanner AI - Potencializado por Gemini AI</p>
-          <p className="text-xs text-slate-400 mt-2">Ferramenta para educadores • v1.0.0</p>
+          <p className="text-slate-500 text-sm">
+            © {new Date().getFullYear()} EduPlanner AI • 
+            {useSampleData ? ' Modo Demonstração' : ' Gerador de Planos de Aula'}
+          </p>
+          <p className="text-xs text-slate-400 mt-1">
+            Desenvolvido para educadores • v1.0
+          </p>
         </div>
       </footer>
     </div>
